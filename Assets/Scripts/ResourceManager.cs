@@ -1,78 +1,62 @@
 using UnityEngine;
-using System;
+using TMPro;
 
-/// <summary>
-/// Manages automatic gathering of three resources over time.
-/// </summary>
 public class ResourceManager : MonoBehaviour
 {
-    // Current counts
-    public int beskarCount { get; private set; }
-    public int kyberCount  { get; private set; }
-    public int partsCount  { get; private set; }
+    // backing fields
+    private int beskarCount;
+    private int kyberCount;
+    private int partsCount;
 
-    // Gather rates (units per second)
-    [SerializeField] private float beskarRate = 1f;
-    [SerializeField] private float kyberRate  = 0.5f;
-    [SerializeField] private float partsRate  = 0.2f;
+    [Header("UI References")]
+    public TMP_Text beskarText;
+    public TMP_Text kyberText;
+    public TMP_Text partsText;
 
-    // Internal timers
-    private float beskarTimer;
-    private float kyberTimer;
-    private float partsTimer;
-
-    // Event when any resource updates
-    public static event Action OnResourcesUpdated;
-
-    void Update()
+    void Start()
     {
-        beskarTimer += Time.deltaTime;
-        kyberTimer  += Time.deltaTime;
-        partsTimer  += Time.deltaTime;
-
-        if (beskarTimer >= 1f / beskarRate)
-        {
-            beskarCount++;
-            beskarTimer = 0f;
-            Debug.Log($"[ResourceManager] Beskar++ → {beskarCount}");
-            OnResourcesUpdated?.Invoke();
-        }
-        if (kyberTimer >= 1f / kyberRate)
-        {
-            kyberCount++;
-            kyberTimer = 0f;
-            OnResourcesUpdated?.Invoke();
-        }
-        if (partsTimer >= 1f / partsRate)
-        {
-            partsCount++;
-            partsTimer = 0f;
-            OnResourcesUpdated?.Invoke();
-        }
+        UpdateUI();
     }
 
-    /// <summary>
-    /// Sell a resource; returns actual sold amount.
-    /// </summary>
-    public int SellResource(string resourceType, int amount)
+    // public getters
+    public int BeskarCount => beskarCount;
+    public int KyberCount  => kyberCount;
+    public int PartsCount  => partsCount;
+
+    // methods to add resources
+    public void AddBeskar(int amount = 1) { beskarCount += amount; UpdateUI(); }
+    public void AddKyber(int amount = 1)  { kyberCount  += amount; UpdateUI(); }
+    public void AddParts(int amount = 1)  { partsCount  += amount; UpdateUI(); }
+
+    // methods to spend resources
+    public bool SpendBeskar(int amount = 1)
     {
-        int sold = 0;
-        switch (resourceType.ToLower())
-        {
-            case "beskar":
-                sold = Mathf.Min(amount, beskarCount);
-                beskarCount -= sold;
-                break;
-            case "kyber":
-                sold = Mathf.Min(amount, kyberCount);
-                kyberCount -= sold;
-                break;
-            case "parts":
-                sold = Mathf.Min(amount, partsCount);
-                partsCount -= sold;
-                break;
-        }
-        if (sold > 0) OnResourcesUpdated?.Invoke();
-        return sold;
+        if (beskarCount < amount) return false;
+        beskarCount -= amount;
+        UpdateUI();
+        return true;
+    }
+
+    public bool SpendKyber(int amount = 1)
+    {
+        if (kyberCount < amount) return false;
+        kyberCount -= amount;
+        UpdateUI();
+        return true;
+    }
+
+    public bool SpendParts(int amount = 1)
+    {
+        if (partsCount < amount) return false;
+        partsCount -= amount;
+        UpdateUI();
+        return true;
+    }
+
+    private void UpdateUI()
+    {
+        if (beskarText != null) beskarText.text = $"Beskar: {beskarCount}";
+        if (kyberText  != null) kyberText.text  = $"Kyber: {kyberCount}";
+        if (partsText  != null) partsText.text  = $"Parts: {partsCount}";
     }
 }
